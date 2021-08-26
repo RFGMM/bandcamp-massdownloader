@@ -1,0 +1,15 @@
+#! /bin/bash
+currenttime=$(date "+%Y.%m.%d-%H.%M.%S")
+if [ -z "$1" ]
+then
+    echo "bash bandcamp-dl_massdownloader <put in here your root of the URL of bandcamp's band you want to download>"
+else
+url=`grep -o '^[^/]*//[^/]*.com' <<< "$1"`
+wget --quiet $1 -O temp-$currenttime.html
+grep "album/" temp-$currenttime.html | grep -oP '"\K[^"\047]+(?=["\047])' > $currenttime.txt
+cat $currenttime.txt | ts $url | tr -d ' ' | while IFS= read -r line
+  	do
+    	bandcamp-dl --template="%{artist}-%{album}/%{track} - %{title}" "$line"
+  	done
+	rm $currenttime.txt
+fi
