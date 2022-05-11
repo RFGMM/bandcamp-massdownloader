@@ -1,0 +1,21 @@
+#! /bin/bash
+urlholder=$(echo $1 | cut -d/ -f1-3)
+artistname=$(echo ${urlholder%%.*} | grep -oP 'https://\K\S+')
+if [ -z "$urlholder" ]
+then
+    echo "bash ./massive-downloader-bandcamp-dl <put in here your URL of bandcamp's band you want to download>"
+else
+   	urllist=()
+   	while IFS= read -r line; do
+	urllist+=( "$line" )
+	done < <(  wget --quiet -O - $1 | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | grep \/album )
+  	for item in "${urllist[@]}"; 
+  	do
+	temporalvar=$(echo "$urlholder$item")
+	echo "URL=$temporalvar" 
+	echo "Arist" $artistname "Album" ${temporalvar##*/}
+	#$albumname=$(echo ${temporalvar##*/})
+	#python3 /home/hyperion/apps/bandcamp-dl.py "$temporalvar" --artist "$artistname" --album "$albumname"
+	bandcamp-dl --template="%{artist}-%{album}/%{track} - %{title}" --base-dir=./ "$temporalvar"
+done
+fi

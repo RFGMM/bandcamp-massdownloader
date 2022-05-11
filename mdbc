@@ -1,0 +1,21 @@
+#! /bin/bash
+currenttime=$(date "+%Y.%m.%d-%H.%M.%S")
+if [ -z "$1" ]
+then
+    echo "bash ./mdbc.sh <put in here your root URL of bandcamp's band you want to download>"
+else
+
+	url=`grep -o '^[^/]*//[^/]*.com' <<< "$1"`
+	#url=`echo "$1" | awk -F// '{$NF=""} 1' OFS=//`
+	echo $url
+    urlarray=`wget --quiet -O - $url | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | grep \/album`
+	echo $urlarray | tr ' ' '\n' > $currenttime.txt
+	#urlarray=`wget --quiet -O - $url | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | grep \/track`
+	#echo $urlarray | tr ' ' '\n' >> $currenttime.txt
+	cat $currenttime.txt | ts $url | tr -d ' ' | while IFS= read -r line
+  	do
+    	bandcamp-dl --template="%{artist}-%{album}/%{track} - %{title}" --base-dir=./ "$line"
+  	done
+	rm $currenttime.txt
+fi
+	#if [[ $temporalvar = */* ]]; then echo "/${temporalvar##*/}"; else echo "$temporalvar"; fi
